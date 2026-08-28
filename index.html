@@ -284,17 +284,20 @@
       </div>
     </div>
 
-    <!-- FORM NOT WIRED YET — connected to a form service on Day 3 -->
-    <div class="form">
-      <div><label for="n">Name</label><input id="n" type="text" placeholder="Your full name"></div>
-      <div><label for="p">Phone / WhatsApp</label><input id="p" type="tel" placeholder="+91"></div>
-      <div><label for="c">Where you live</label><input id="c" type="text" placeholder="Bengaluru, Shivamogga, Mangalore…"></div>
+    <!-- FORM WIRED TO WEB3FORMS -->
+    <form class="form" action="https://api.web3forms.com/submit" method="POST">
+      <input type="hidden" name="access_key" value="473479c0-2b79-4631-a49b-df5961baecaa">
+      <input type="hidden" name="subject" value="New Yauvana enquiry">
+      <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+      <div><label for="n">Name</label><input id="n" name="name" type="text" placeholder="Your full name"></div>
+      <div><label for="p">Phone / WhatsApp</label><input id="p" name="phone" type="tel" placeholder="+91"></div>
+      <div><label for="c">Where you live</label><input id="c" name="city" type="text" placeholder="Bengaluru, Shivamogga, Mangalore…"></div>
       <div><label for="s">Site size</label>
-        <select id="s"><option>30 × 40</option><option>40 × 60</option><option>50 × 80</option><option>Not decided yet</option></select>
+        <select id="s" name="plot_size"><option>30 × 40</option><option>40 × 60</option><option>50 × 80</option><option>Not decided yet</option></select>
       </div>
-      <button class="btn" type="button">Send enquiry</button>
+      <button class="btn" type="submit">Send enquiry</button>
       <p class="form-note">Your details go to the Yauvana site office only, and are not shared with anyone else.</p>
-    </div>
+    </form>
   </div>
 </section>
 

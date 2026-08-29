@@ -84,18 +84,20 @@
   .vision h2{color:var(--paper)}
   .vision .kicker{color:var(--fern)}
   .vision .lede{color:var(--mist)}
-  .stage{margin-top:44px;border:1px solid var(--line)}
-  .stage .ph{aspect-ratio:16/9}
-  @media(max-width:600px){.stage .ph{aspect-ratio:4/3}}
-  .stage-bar{display:flex;flex-wrap:wrap;border-top:1px solid var(--line)}
-  .shot{flex:1 1 130px;padding:14px 16px;border-right:1px solid var(--line);
-    font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--fern);cursor:pointer;background:none;border-top:none;border-bottom:none;border-left:none;
-    text-align:left;transition:color .2s,background .2s}
-  .shot:last-child{border-right:none}
-  .shot:hover{color:var(--paper);background:rgba(255,255,255,.04)}
-  .shot[aria-selected="true"]{color:var(--amber);background:rgba(201,138,46,.08)}
-  .stage-cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);padding:16px 0 0;line-height:1.9}
+  /* scroll-driven image sequence */
+  .seq{position:relative;height:400vh;margin-top:44px}
+  .seq-sticky{position:sticky;top:0;height:100vh;overflow:hidden;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .seq-frame{position:absolute;inset:0;opacity:0}
+  .seq-img{width:100%;height:100%;object-fit:cover}
+  .seq-fc{display:none}
+  .seq-scrim{position:absolute;left:0;right:0;bottom:0;height:42%;pointer-events:none;
+    background:linear-gradient(180deg,rgba(13,23,18,0) 0%,rgba(13,23,18,.86) 100%)}
+  .seq-cap{position:absolute;left:var(--gut);right:var(--gut);bottom:26px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);line-height:1.9}
+  .seq-dots{position:absolute;right:var(--gut);top:26px;display:flex;gap:8px;list-style:none}
+  .seq-dots li{width:8px;height:8px;border:1px solid var(--line);transition:background .3s,border-color .3s}
+  .seq-dots li[aria-current="true"]{background:var(--amber);border-color:var(--amber)}
 
   /* amenities */
   .am-grid{display:grid;gap:1px;margin-top:44px;background:var(--line-dark);
@@ -152,7 +154,19 @@
   @media(prefers-reduced-motion:reduce){
     .rise{opacity:1;transform:none;transition:none}
     html{scroll-behavior:auto}.btn:hover{transform:none}
+    .seq{height:auto}
+    .seq-sticky{position:static;height:auto;overflow:visible}
+    .seq-frame{position:static;opacity:1!important;margin-bottom:14px}
+    .seq-img{height:auto;aspect-ratio:16/9}
+    .seq-fc{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);padding:16px 0 0;line-height:1.9}
+    .seq-cap,.seq-scrim,.seq-dots{display:none}
   }
+  .seq--static{height:auto}
+  .seq--static .seq-sticky{position:static;height:auto;overflow:visible}
+  .seq--static .seq-frame{position:static;opacity:1;margin-bottom:14px}
+  .seq--static .seq-img{height:auto;aspect-ratio:16/9}
+  .seq--static .seq-fc{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);padding:16px 0 0;line-height:1.9}
+  .seq--static .seq-cap,.seq--static .seq-scrim,.seq--static .seq-dots{display:none}
 </style>
 </head>
 <body>
@@ -199,23 +213,41 @@
 </section>
 
 <!-- SIGNATURE: the finished layout, rendered. Real 3D model goes here on Day 4. -->
-<section class="vision rise">
-  <div class="wrap">
+<section class="vision">
+  <div class="wrap rise">
     <p class="kicker">The layout</p>
     <h2>See it the way you will <em>live in it</em>.</h2>
     <p class="lede">The layout as it will stand — entrance, avenues, clubhouse and site plan.</p>
+  </div>
 
-    <div class="stage">
-      <div class="ph"><img id="stage-img" src="images/render-aerial.jpg" alt="3D render — aerial view of the finished fifty-acre Yauvana layout in the hills" loading="lazy"></div>
-      <div class="stage-bar" role="tablist">
-        <button class="shot" role="tab" aria-selected="true"  data-src="images/render-aerial.jpg"    data-cap="3D render — aerial view of the finished fifty-acre Yauvana layout in the hills">Aerial view</button>
-        <button class="shot" role="tab" aria-selected="false" data-src="images/render-entrance.jpg"  data-cap="3D render — the main entrance arch and gatehouse">Entrance</button>
-        <button class="shot" role="tab" aria-selected="false" data-src="images/render-avenue.jpg"    data-cap="3D render — a tree-lined internal avenue with kerb lighting">Avenues</button>
-        <button class="shot" role="tab" aria-selected="false" data-src="images/render-clubhouse.jpg" data-cap="3D render — the clubhouse exterior with pool at dusk">Clubhouse</button>
-        <button class="shot" role="tab" aria-selected="false" data-src="images/render-aerial.jpg"    data-cap="Site plan — the fifty-acre layout as planned">Site plan</button>
-      </div>
+  <div class="seq" data-seq>
+    <div class="seq-sticky">
+      <figure class="seq-frame" style="opacity:1">
+        <img class="seq-img" src="images/render-aerial.jpg" alt="3D render — aerial view of the finished fifty-acre Yauvana layout in the hills" loading="eager" fetchpriority="high">
+        <figcaption class="seq-fc">Aerial view — the fifty-acre layout as planned.</figcaption>
+      </figure>
+      <figure class="seq-frame">
+        <img class="seq-img" src="images/render-entrance.jpg" alt="3D render — the main entrance arch and gatehouse" loading="lazy">
+        <figcaption class="seq-fc">The main entrance arch and gatehouse.</figcaption>
+      </figure>
+      <figure class="seq-frame">
+        <img class="seq-img" src="images/render-avenue.jpg" alt="3D render — a tree-lined internal avenue with kerb lighting" loading="lazy">
+        <figcaption class="seq-fc">A tree-lined internal avenue with kerb lighting.</figcaption>
+      </figure>
+      <figure class="seq-frame">
+        <img class="seq-img" src="images/render-clubhouse.jpg" alt="3D render — the clubhouse exterior with pool at dusk" loading="lazy">
+        <figcaption class="seq-fc">The clubhouse exterior with pool at dusk.</figcaption>
+      </figure>
+      <figure class="seq-frame">
+        <img class="seq-img" src="images/render-aerial.jpg" alt="Site plan — the fifty-acre Yauvana layout as planned" loading="lazy">
+        <figcaption class="seq-fc">Site plan — the fifty-acre layout as planned.</figcaption>
+      </figure>
+      <div class="seq-scrim"></div>
+      <p class="seq-cap" id="seq-cap">Aerial view — the fifty-acre layout as planned.</p>
+      <ol class="seq-dots" aria-hidden="true">
+        <li aria-current="true"></li><li></li><li></li><li></li><li></li>
+      </ol>
     </div>
-    <p class="stage-cap" id="stage-cap">Aerial view — the fifty-acre layout as planned.</p>
   </div>
 </section>
 
@@ -312,16 +344,43 @@
   const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.12});
   document.querySelectorAll('.rise').forEach(el=>io.observe(el));
 
-  const img=document.getElementById('stage-img'), cap=document.getElementById('stage-cap');
-  document.querySelectorAll('.shot').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.querySelectorAll('.shot').forEach(x=>x.setAttribute('aria-selected','false'));
-      b.setAttribute('aria-selected','true');
-      img.src=b.dataset.src;
-      img.alt=b.dataset.cap;
-      cap.textContent=b.textContent+' — Yauvana Estate, as planned.';
-    });
+  const seq=document.querySelector('[data-seq]');
+  const frames=[...seq.querySelectorAll('.seq-frame')];
+  const dots=[...seq.querySelectorAll('.seq-dots li')];
+  const seqCap=document.getElementById('seq-cap');
+  const seqCaps=frames.map(f=>f.querySelector('.seq-fc').textContent);
+
+  // aerial loads eagerly; pull the other four in once the page has settled
+  addEventListener('load',()=>{
+    frames.slice(1).forEach(f=>{const i=new Image();i.src=f.querySelector('.seq-img').getAttribute('src');});
   });
+
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){
+    seq.classList.add('seq--static');
+  }else{
+    let current=-1, ticking=false;
+    const update=()=>{
+      ticking=false;
+      const rect=seq.getBoundingClientRect();
+      const span=rect.height-innerHeight;
+      const progress=span>0?Math.min(1,Math.max(0,-rect.top/span)):0;
+      const pos=progress*(frames.length-1);
+      frames.forEach((f,i)=>{
+        const d=Math.abs(pos-i);
+        f.style.opacity=d>=1?0:(1-d);
+      });
+      const active=Math.round(pos);
+      if(active!==current){
+        current=active;
+        seqCap.textContent=seqCaps[active];
+        dots.forEach((dot,i)=>dot.setAttribute('aria-current',i===active?'true':'false'));
+      }
+    };
+    const onScroll=()=>{if(!ticking){ticking=true;requestAnimationFrame(update);}};
+    addEventListener('scroll',onScroll,{passive:true});
+    addEventListener('resize',onScroll);
+    update();
+  }
 </script>
 
 </body>

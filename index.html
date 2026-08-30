@@ -4,9 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Yauvana Estate — Premium plotted layout, Thirthahalli</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23182C21'/%3E%3Ctext x='16' y='24' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='24' fill='%23EFF2EE'%3EY%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": {
+  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
 <style>
   :root{
     --ink:#0D1712;--forest:#182C21;--moss:#496B55;--fern:#7B9683;
@@ -17,6 +24,11 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
+  /* Lenis smooth-scroll reset */
+  html.lenis,html.lenis body{height:auto}
+  .lenis.lenis-smooth{scroll-behavior:auto!important}
+  .lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+  .lenis.lenis-stopped{overflow:hidden}
   body{background:var(--paper);color:var(--ink);font-family:var(--body);line-height:1.6;-webkit-font-smoothing:antialiased}
   img{display:block;max-width:100%}
   a{color:inherit}
@@ -36,14 +48,23 @@
 
   .nav{position:sticky;top:0;z-index:50;background:rgba(13,23,18,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
-  .brand{font-family:var(--display);font-weight:600;font-size:19px;color:var(--paper);text-decoration:none}
-  .brand span{display:block;font-family:var(--mono);font-size:9px;font-weight:400;letter-spacing:.28em;color:var(--fern);text-transform:uppercase;margin-top:-2px}
+  /* reusable wordmark — all three parts scale from the parent's font-size */
+  .wordmark{display:inline-block;color:inherit;text-decoration:none;line-height:1}
+  .wordmark-mark{display:block;width:max-content;max-width:100%}
+  .wordmark-name{display:block;font-family:var(--display);font-weight:400;font-size:1em;
+    text-transform:uppercase;letter-spacing:.22em;margin-right:-.22em}
+  .wordmark-mark::after{content:"";display:block;height:1px;background:currentColor;
+    opacity:.4;margin-top:.32em}
+  .wordmark-sub{display:block;margin-top:.34em;font-family:var(--mono);font-weight:400;
+    font-size:.4em;text-transform:uppercase;letter-spacing:.28em;margin-right:-.28em;white-space:nowrap}
+  .nav .wordmark{font-size:19px;color:var(--paper)}
   .nav-cta{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--paper);
     text-decoration:none;border:1px solid var(--line);padding:9px 16px;transition:background .2s,border-color .2s}
   .nav-cta:hover{background:var(--moss);border-color:var(--moss)}
 
   .hero{position:relative;background:var(--ink);color:var(--paper)}
   .hero .ph{position:absolute;inset:0}
+  .hero .ph img{will-change:transform}
   .hero-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,23,18,.58) 0%,rgba(13,23,18,.2) 34%,rgba(13,23,18,.9) 86%,var(--ink) 100%)}
   .hero-inner{position:relative;padding:clamp(88px,17vh,150px) 0 clamp(44px,7vh,72px);max-width:660px}
   .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--fern);margin-bottom:24px}
@@ -148,6 +169,7 @@
 
   footer{background:var(--ink);color:var(--fern);border-top:1px solid var(--line);padding:26px 0}
   footer .wrap{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+  footer .wordmark{font-size:34px;align-self:center}
 
   .rise{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
   .rise.in{opacity:1;transform:none}
@@ -167,13 +189,31 @@
   .seq--static .seq-img{height:auto;aspect-ratio:16/9}
   .seq--static .seq-fc{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);padding:16px 0 0;line-height:1.9}
   .seq--static .seq-cap,.seq--static .seq-scrim,.seq--static .seq-dots{display:none}
+
+  /* ---- 3D layout model ---- */
+  .model{background:var(--ink);color:var(--paper)}
+  .model h2{color:var(--paper)}.model .kicker{color:var(--fern)}.model .lede{color:var(--mist)}
+  .model-stage{position:relative;margin-top:44px;height:clamp(420px,64vh,640px);overflow:hidden;
+    background:#A7C7DA;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .model-stage canvas{display:block;width:100%;height:100%}
+  .model-status{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--fern)}
+  .model-fallback{position:absolute;inset:0}
+  .model-fallback img{width:100%;height:100%;object-fit:cover}
+  .model-fallback figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 26px 22px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);line-height:1.9;
+    background:linear-gradient(180deg,rgba(13,23,18,0) 0%,rgba(13,23,18,.86) 100%)}
+  .model-hint{margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern)}
 </style>
 </head>
 <body>
 
 <nav class="nav">
   <div class="wrap">
-    <a class="brand" href="#top">Yauvana<span>Estate · Thirthahalli</span></a>
+    <a class="wordmark" href="#top" aria-label="Yauvana Estate, Thirthahalli">
+      <span class="wordmark-mark"><span class="wordmark-name">Yauvana</span></span>
+      <span class="wordmark-sub">Estate · Thirthahalli</span>
+    </a>
     <a class="nav-cta" href="#enquire">Enquire</a>
   </div>
 </nav>
@@ -248,6 +288,25 @@
         <li aria-current="true"></li><li></li><li></li><li></li><li></li>
       </ol>
     </div>
+  </div>
+</section>
+
+<section class="model">
+  <div class="wrap rise">
+    <p class="kicker">The layout · 3D</p>
+    <h2>The whole plan, <em>in the round</em>.</h2>
+    <p class="lede">A massing model of the fifty-acre layout — blocks, avenues, the clubhouse
+      and the entrance gate. Drag to turn it; scroll to zoom.</p>
+  </div>
+  <div class="wrap rise">
+    <div class="model-stage" data-model>
+      <p class="model-status">Loading 3D layout…</p>
+      <figure class="model-fallback" hidden>
+        <img src="images/render-aerial.jpg" alt="Aerial render of the finished Yauvana layout">
+        <figcaption>Interactive 3D isn't supported on this device — aerial render shown instead.</figcaption>
+      </figure>
+    </div>
+    <p class="model-hint">Drag to rotate · scroll to zoom</p>
   </div>
 </section>
 
@@ -335,15 +394,20 @@
 
 <footer>
   <div class="wrap">
-    <div>Yauvana Estate · Thirthahalli</div>
+    <div class="wordmark">
+      <span class="wordmark-mark"><span class="wordmark-name">Yauvana</span></span>
+      <span class="wordmark-sub">Estate · Thirthahalli</span>
+    </div>
     <div>Shivamogga District, Karnataka</div>
   </div>
 </footer>
 
-<script>
-  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.12});
-  document.querySelectorAll('.rise').forEach(el=>io.observe(el));
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
 
+<script>
   const seq=document.querySelector('[data-seq]');
   const frames=[...seq.querySelectorAll('.seq-frame')];
   const dots=[...seq.querySelectorAll('.seq-dots li')];
@@ -365,9 +429,12 @@
       const span=rect.height-innerHeight;
       const progress=span>0?Math.min(1,Math.max(0,-rect.top/span)):0;
       const pos=progress*(frames.length-1);
+      const FADE=0.15;                     // crossfade width, as a fraction of one band
+      const e0=0.5-FADE/2, e1=0.5+FADE/2;  // 0.425 .. 0.575
       frames.forEach((f,i)=>{
         const d=Math.abs(pos-i);
-        f.style.opacity=d>=1?0:(1-d);
+        const t=(d-e0)/(e1-e0);            // <0 fully opaque, >1 fully hidden
+        f.style.opacity=Math.min(1,Math.max(0,1-t));
       });
       const active=Math.round(pos);
       if(active!==current){
@@ -381,6 +448,350 @@
     addEventListener('resize',onScroll);
     update();
   }
+
+  /* ---- 3D layout model ---- */
+  const modelStage=document.querySelector('[data-model]');
+  if(modelStage){
+    const statusEl=modelStage.querySelector('.model-status');
+    const fallbackEl=modelStage.querySelector('.model-fallback');
+    const showFallback=()=>{
+      if(statusEl) statusEl.remove();
+      if(fallbackEl) fallbackEl.hidden=false;
+    };
+    const webglOK=()=>{
+      try{
+        const c=document.createElement('canvas');
+        return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));
+      }catch(e){return false;}
+    };
+
+    let started=false;
+    const startModel=()=>{
+      if(started) return; started=true;
+      if(!webglOK()){showFallback();return;}
+      initModel().catch(err=>{console.error(err);showFallback();});
+    };
+
+    const mo=new IntersectionObserver(es=>{
+      es.forEach(e=>{if(e.isIntersecting){mo.disconnect();startModel();}});
+    },{rootMargin:'400px 0px'});
+    mo.observe(modelStage);
+
+    async function initModel(){
+      const THREE=await import('three');
+      const {OrbitControls}=await import('three/addons/controls/OrbitControls.js');
+
+      const stageW=()=>modelStage.clientWidth;
+      const stageH=()=>modelStage.clientHeight;
+
+      const renderer=new THREE.WebGLRenderer({antialias:true});
+      renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+      renderer.setSize(stageW(),stageH());
+      renderer.shadowMap.enabled=true;
+      renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+      renderer.toneMapping=THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure=1.1;
+      renderer.outputColorSpace=THREE.SRGBColorSpace;
+      modelStage.appendChild(renderer.domElement);
+
+      const SKY=0xA7C7DA;
+      const scene=new THREE.Scene();
+      scene.background=new THREE.Color(SKY);
+      scene.fog=new THREE.Fog(SKY,80,220);
+
+      const camera=new THREE.PerspectiveCamera(45,stageW()/stageH(),0.1,500);
+      camera.position.set(28,44,48);
+
+      const controls=new OrbitControls(camera,renderer.domElement);
+      controls.enableDamping=true;
+      controls.enablePan=false;
+      controls.minDistance=20;
+      controls.maxDistance=120;
+      controls.maxPolarAngle=Math.PI/2.15;
+      controls.target.set(0,2,0);
+
+      // ---- lights: soft daylight ----
+      const hemi=new THREE.HemisphereLight(0xBBD6E8,0x4A5B39,0.8);
+      scene.add(hemi);
+      const sun=new THREE.DirectionalLight(0xFFF2D8,2.2);
+      sun.position.set(62,95,38);
+      sun.castShadow=true;
+      sun.shadow.mapSize.set(2048,2048);
+      Object.assign(sun.shadow.camera,{left:-80,right:80,top:80,bottom:-80,near:1,far:280});
+      sun.shadow.bias=-0.0004;
+      sun.shadow.normalBias=0.03;
+      sun.shadow.radius=2.5;
+      scene.add(sun);
+
+      // ---- materials ----
+      const matGround=new THREE.MeshStandardMaterial({color:0x12241b,roughness:1});
+      const matRoad  =new THREE.MeshStandardMaterial({color:0x2B2E30,roughness:0.95});
+      const matPath  =new THREE.MeshStandardMaterial({color:0xCED2C9,roughness:0.9});
+      const matPark  =new THREE.MeshStandardMaterial({color:0x6DB24D,roughness:0.8});
+      const matTrunk =new THREE.MeshStandardMaterial({color:0x5A3D24,roughness:0.9});
+      const matWall  =new THREE.MeshStandardMaterial({color:0xEAE6DD,roughness:0.7});
+      const matRoof  =new THREE.MeshStandardMaterial({color:0xA0522D,roughness:0.8});
+      const matPool  =new THREE.MeshStandardMaterial({color:0x3D7EA6,roughness:0.15});
+      const matStone =new THREE.MeshStandardMaterial({color:0x8D8577,roughness:0.95});
+      const matBeam  =new THREE.MeshStandardMaterial({color:0x6B6459,roughness:0.9});
+
+      // ---- ground plane, far past the layout ----
+      const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),matGround);
+      ground.rotation.x=-Math.PI/2;
+      ground.receiveShadow=true;
+      scene.add(ground);
+
+      const layout=new THREE.Group();
+      scene.add(layout);
+
+      // ---- plots: 4 blocks (2x2), each a 5x2 grid => 40 plots ----
+      const PLOT_W=5,PLOT_H=0.4,PLOT_D=4,GAP=0.7,ROAD_W=4;
+      const COLS=5,ROWS=2;
+      const bw=COLS*(PLOT_W+GAP)-GAP;
+      const bd=ROWS*(PLOT_D+GAP)-GAP;
+      const plotGeo=new THREE.BoxGeometry(PLOT_W,PLOT_H,PLOT_D);
+      const parkGeo=new THREE.BoxGeometry(PLOT_W,0.15,PLOT_D);
+      const plotBase=new THREE.Color(0x4F7A53);
+      for(let bx=0;bx<2;bx++){
+        for(let bz=0;bz<2;bz++){
+          const ox=(bx-0.5)*(bw+ROAD_W)-bw/2+PLOT_W/2;
+          const oz=(bz-0.5)*(bd+ROAD_W)-bd/2+PLOT_D/2;
+          const parkPx=bx===0?COLS-1:0, parkPz=bz===0?ROWS-1:0;
+          for(let px=0;px<COLS;px++){
+            for(let pz=0;pz<ROWS;pz++){
+              const isPark=px===parkPx&&pz===parkPz;
+              let m;
+              if(isPark){
+                m=new THREE.Mesh(parkGeo,matPark);
+                m.position.set(ox+px*(PLOT_W+GAP),0.075,oz+pz*(PLOT_D+GAP));
+              }else{
+                const c=plotBase.clone().offsetHSL((Math.random()-0.5)*0.04,(Math.random()-0.5)*0.06,(Math.random()-0.5)*0.06);
+                m=new THREE.Mesh(plotGeo,new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
+                m.position.set(ox+px*(PLOT_W+GAP),PLOT_H/2,oz+pz*(PLOT_D+GAP));
+              }
+              m.castShadow=true;m.receiveShadow=true;
+              layout.add(m);
+            }
+          }
+        }
+      }
+
+      // ---- roads + concrete kerbs ----
+      const totalW=2*bw+ROAD_W+10;
+      const totalD=2*bd+ROAD_W+10;
+      const strip=(mat,w,d,x,z,y)=>{
+        const r=new THREE.Mesh(new THREE.PlaneGeometry(w,d),mat);
+        r.rotation.x=-Math.PI/2;
+        r.position.set(x,y,z);
+        r.receiveShadow=true;
+        layout.add(r);
+      };
+      const KERB=0.5;
+      const road=(w,d,x,z)=>{
+        strip(matRoad,w,d,x,z,0.02);
+        if(w>d){ // horizontal run: kerbs on north/south edges
+          strip(matPath,w,KERB,x,z-d/2-KERB/2,0.03);
+          strip(matPath,w,KERB,x,z+d/2+KERB/2,0.03);
+        }else{   // vertical run: kerbs on east/west edges
+          strip(matPath,KERB,d,x-w/2-KERB/2,z,0.03);
+          strip(matPath,KERB,d,x+w/2+KERB/2,z,0.03);
+        }
+      };
+      road(ROAD_W,totalD,0,0);              // vertical spine
+      road(totalW,ROAD_W,0,0);              // horizontal spine
+      road(totalW,ROAD_W,0,-totalD/2);     // perimeter
+      road(totalW,ROAD_W,0, totalD/2);
+      road(ROAD_W,totalD,-totalW/2,0);
+      road(ROAD_W,totalD, totalW/2,0);
+
+      // ---- trees lining the roads, evenly spaced, off the plots ----
+      const leafBase=new THREE.Color(0x5F9E4D);
+      const tree=(x,z)=>{
+        const s=0.7+Math.random()*0.6;                 // +/-30% size
+        const th=2*s;
+        const g=new THREE.Group();
+        const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.16*s,0.22*s,th,6),matTrunk);
+        trunk.position.y=th/2;trunk.castShadow=true;
+        const leafMat=new THREE.MeshStandardMaterial({
+          color:leafBase.clone().offsetHSL((Math.random()-0.5)*0.05,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.08),
+          roughness:0.9});
+        const c1=new THREE.Mesh(new THREE.SphereGeometry(1.15*s,10,8),leafMat);
+        c1.position.y=th+0.5*s;c1.castShadow=true;
+        const c2=new THREE.Mesh(new THREE.SphereGeometry(0.85*s,10,8),leafMat);
+        c2.position.y=th+1.5*s;c2.castShadow=true;
+        g.add(trunk,c1,c2);
+        g.position.set(x,0,z);
+        g.rotation.y=Math.random()*Math.PI;
+        layout.add(g);
+      };
+      const VERGE=ROAD_W/2+1.3, STEP=4;
+      for(let z=-totalD/2+STEP;z<=totalD/2-STEP;z+=STEP){
+        if(Math.abs(z)<ROAD_W){continue;}
+        tree(-VERGE,z);tree(VERGE,z);                       // along vertical spine
+        tree(-totalW/2+VERGE,z);tree(totalW/2-VERGE,z);     // along E/W perimeter
+      }
+      for(let x=-totalW/2+STEP;x<=totalW/2-STEP;x+=STEP){
+        if(Math.abs(x)<ROAD_W){continue;}
+        tree(x,-VERGE);tree(x,VERGE);                       // along horizontal spine
+        tree(x,-totalD/2+VERGE);tree(x,totalD/2-VERGE);     // along N/S perimeter
+      }
+
+      // ---- clubhouse: walls, terracotta gable roof, pool ----
+      const gable=(w,d,h)=>{
+        const sh=new THREE.Shape();
+        sh.moveTo(-w/2,0);sh.lineTo(w/2,0);sh.lineTo(0,h);sh.lineTo(-w/2,0);
+        const gg=new THREE.ExtrudeGeometry(sh,{depth:d,bevelEnabled:false});
+        gg.translate(0,0,-d/2);
+        return gg;
+      };
+      const club=new THREE.Group();
+      const body=new THREE.Mesh(new THREE.BoxGeometry(12,4,8),matWall);
+      body.position.y=2;body.castShadow=true;body.receiveShadow=true;
+      const bodyRoof=new THREE.Mesh(gable(13,8.8,3),matRoof);
+      bodyRoof.position.y=4;bodyRoof.castShadow=true;
+      const wing=new THREE.Mesh(new THREE.BoxGeometry(6,3,5),matWall);
+      wing.position.set(8,1.5,1.5);wing.castShadow=true;wing.receiveShadow=true;
+      const wingRoof=new THREE.Mesh(gable(6.8,5.6,1.9),matRoof);
+      wingRoof.position.set(8,3,1.5);wingRoof.castShadow=true;
+      const poolSurround=new THREE.Mesh(new THREE.BoxGeometry(9,0.2,6),matPath);
+      poolSurround.position.set(-1,0.1,7);poolSurround.receiveShadow=true;
+      const pool=new THREE.Mesh(new THREE.BoxGeometry(7,0.16,4),matPool);
+      pool.position.set(-1,0.22,7);pool.receiveShadow=true;
+      club.add(body,bodyRoof,wing,wingRoof,poolSurround,pool);
+      club.position.set(7,0,4);
+      layout.add(club);
+
+      // ---- entrance gate: two stone pillars + beam ----
+      const gate=new THREE.Group();
+      const pillarGeo=new THREE.BoxGeometry(1.4,5.5,1.4);
+      const capGeo=new THREE.BoxGeometry(1.9,0.4,1.9);
+      [-1,1].forEach(sgn=>{
+        const px=sgn*(ROAD_W/2+1);
+        const p=new THREE.Mesh(pillarGeo,matStone);p.position.set(px,2.75,0);
+        const cap=new THREE.Mesh(capGeo,matStone);cap.position.set(px,5.7,0);
+        [p,cap].forEach(m=>{m.castShadow=true;m.receiveShadow=true;gate.add(m);});
+      });
+      const beam=new THREE.Mesh(new THREE.BoxGeometry(ROAD_W+4,0.8,1.0),matBeam);
+      beam.position.y=5.2;beam.castShadow=true;
+      gate.add(beam);
+      gate.position.set(0,0,totalD/2);
+      layout.add(gate);
+
+      // ---- behaviour: slow auto-rotation, paused while dragging ----
+      const spin=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let dragging=false;
+      controls.addEventListener('start',()=>dragging=true);
+      controls.addEventListener('end',()=>dragging=false);
+
+      const onResize=()=>{
+        camera.aspect=stageW()/stageH();
+        camera.updateProjectionMatrix();
+        renderer.setSize(stageW(),stageH());
+      };
+      addEventListener('resize',onResize);
+
+      renderer.setAnimationLoop(()=>{
+        if(spin&&!dragging) layout.rotation.y+=0.0012;
+        controls.update();
+        renderer.render(scene,camera);
+      });
+
+      if(statusEl) statusEl.remove();
+    }
+  }
+
+  /* ---- smooth scroll + scroll animations ---- */
+  (function(){
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce||!window.gsap||!window.ScrollTrigger||!window.SplitText||!window.Lenis){
+      document.querySelectorAll('.rise').forEach(el=>el.classList.add('in'));
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger,SplitText);
+
+    const lenis=new Lenis({
+      duration:1.2,
+      easing:t=>1-Math.pow(1-t,3)          // easeOutCubic — decelerating
+    });
+    lenis.on('scroll',ScrollTrigger.update);
+    gsap.ticker.add(time=>lenis.raf(time*1000));
+    gsap.ticker.lagSmoothing(0);
+
+    ScrollTrigger.scrollerProxy(document.body,{
+      scrollTop(v){ if(arguments.length) lenis.scrollTo(v,{immediate:true}); return window.scrollY; },
+      getBoundingClientRect(){ return {top:0,left:0,width:innerWidth,height:innerHeight}; },
+      pinType:'fixed'
+    });
+    ScrollTrigger.defaults({scroller:document.body});
+    ScrollTrigger.addEventListener('refresh',()=>lenis.resize());
+
+    // smooth in-page anchor jumps
+    document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{
+      const id=a.getAttribute('href');
+      if(id.length>1){ e.preventDefault(); lenis.scrollTo(id,{offset:-70}); }
+    }));
+
+    // generic .rise reveal (replaces the IntersectionObserver)
+    gsap.set('.rise',{opacity:0,y:18});
+    ScrollTrigger.batch('.rise',{
+      start:'top 88%',
+      onEnter:b=>gsap.to(b,{opacity:1,y:0,duration:.8,stagger:.1,ease:'power2.out',overwrite:true})
+    });
+
+    // amenity cards
+    gsap.set('.am',{opacity:0,y:24});
+    ScrollTrigger.batch('.am',{
+      start:'top 85%',
+      onEnter:b=>gsap.to(b,{opacity:1,y:0,duration:.6,stagger:.08,ease:'power2.out',overwrite:true})
+    });
+
+    // hero image parallax — drifts slower than the page
+    gsap.set('.hero .ph img',{scale:1.16,transformOrigin:'center center'});
+    gsap.fromTo('.hero .ph img',{yPercent:-8},{
+      yPercent:8,ease:'none',
+      scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}
+    });
+
+    // facts bar — count up from zero
+    gsap.utils.toArray('.fact-n').forEach(el=>{
+      const m=el.textContent.trim().match(/^([\d.]+)(.*)$/);
+      if(!m) return;
+      const end=parseFloat(m[1]), suffix=m[2]||'', o={v:0};
+      el.textContent='0'+suffix;
+      gsap.to(o,{
+        v:end,duration:1.6,ease:'power2.out',
+        scrollTrigger:{trigger:'.facts',start:'top 80%',once:true},
+        onUpdate:()=>{ el.textContent=Math.round(o.v)+suffix; }
+      });
+    });
+
+    // text splits need the real fonts to measure line breaks
+    document.fonts.ready.then(()=>{
+      // hero h1 — characters rise up and in on load
+      new SplitText('.hero h1',{
+        type:'chars',mask:'chars',autoSplit:true,
+        onSplit(self){
+          return gsap.from(self.chars,{yPercent:120,opacity:0,stagger:.03,duration:.8,ease:'power3.out',delay:.15});
+        }
+      });
+
+      // section headings — reveal line by line on scroll
+      gsap.utils.toArray('section h2, .hand-big').forEach(h=>{
+        new SplitText(h,{
+          type:'lines',mask:'lines',autoSplit:true,
+          onSplit(self){
+            return gsap.from(self.lines,{
+              yPercent:100,duration:.6,stagger:.12,ease:'power3.out',
+              scrollTrigger:{trigger:h,start:'top 85%'}
+            });s
+          }
+        });
+      });
+
+      ScrollTrigger.refresh();
+    });
+  })();
 </script>
 
 </body>

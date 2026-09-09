@@ -204,6 +204,10 @@
     font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern);line-height:1.9;
     background:linear-gradient(180deg,rgba(13,23,18,0) 0%,rgba(13,23,18,.86) 100%)}
   .model-hint{margin-top:16px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--fern)}
+
+  /* spline 3D scene */
+  spline-viewer{display:block;width:100%;height:70vh}
+  @media(max-width:640px){spline-viewer{height:50vh}}
 </style>
 </head>
 <body>
@@ -320,6 +324,15 @@
     <div class="am"><div class="am-i">04</div><h3>Gated entry</h3><p>One controlled entrance, with security and visitor access managed at the gate.</p></div>
     <div class="am"><div class="am-i">05</div><h3>Malnad drainage</h3><p>Roads and storm drains sized for Western Ghats rain, not city rain.</p></div>
     <div class="am"><div class="am-i">06</div><h3>Open and green</h3><p>Parks and open space kept aside inside the layout, not squeezed out for extra sites.</p></div>
+  </div>
+</section>
+
+<section class="wrap rise">
+  <p class="kicker">The layout · Interactive</p>
+  <h2>Turn it, zoom it — <em>walk the estate</em>.</h2>
+  <p class="lede">An interactive 3D scene of the layout. Drag to orbit, scroll to zoom.</p>
+  <div class="spline-stage" data-spline>
+    <spline-viewer url="https://prod.spline.design/41ZmIaQyGiyC1H38/scene.splinecode" loading-anim-type="spinner-small-dark"></spline-viewer>
   </div>
 </section>
 
@@ -698,6 +711,21 @@
 
       if(statusEl) statusEl.remove();
     }
+  }
+
+  /* ---- Spline 3D scene: lazy-load the viewer runtime ---- */
+  const splineStage=document.querySelector('[data-spline]');
+  if(splineStage){
+    const loadSplineViewer=()=>{
+      const s=document.createElement('script');
+      s.type='module';
+      s.src='https://cdn.spline.design/@splinetool/viewer@2.0.43/build/spline-viewer.webgl.js';
+      document.head.appendChild(s);
+    };
+    const so=new IntersectionObserver(es=>{
+      es.forEach(e=>{if(e.isIntersecting){so.disconnect();loadSplineViewer();}});
+    },{rootMargin:'400px 0px'});
+    so.observe(splineStage);
   }
 
   /* ---- smooth scroll + scroll animations ---- */
